@@ -2,6 +2,7 @@ import streamlit as st
 import preprocessor, helper
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 st.sidebar.title("Whatsapp Chat Analyzer")
 
@@ -44,6 +45,23 @@ if uploaded_file is not None:
         with col4:
             st.header("Total Links")
             st.title(num_of_links)
+
+        #Sentiment Analysis
+        st.title("Sentiment Analysis")
+        positive, neutral, negative = helper.sentiment_analysis(selected_user, df)
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.header("Positive Messages")
+            st.title(positive)
+
+        with col2:
+            st.header("Neutral Messages")
+            st.title(neutral)
+
+        with col3:
+            st.header("Negative Messages")
+            st.title(negative)
 
 
         # Monthly Timeline
@@ -115,20 +133,31 @@ if uploaded_file is not None:
 
         # Generating wordcloud
         st.title("Word cloud")
-        df_wc = helper.create_wordcloud(selected_user, df)
-        fig, ax = plt.subplots()
-        ax.imshow(df_wc)
-        st.pyplot(fig)
+        
+        try:
+            df_wc = helper.create_wordcloud(selected_user, df)
+            fig, ax = plt.subplots()
+            ax.imshow(df_wc)
+            st.pyplot(fig)
+        except:
+            df_wc = helper.create_wordcloud(selected_user, pd.DataFrame({"user":[selected_user],"message":["(No-messages)"]}))
+            fig, ax = plt.subplots()
+            ax.imshow(df_wc)
+            st.pyplot(fig)
 
         # most common words
         st.title("Most common Words")
-        common_words = helper.most_common_words(selected_user, df)
+        try:
+            common_words = helper.most_common_words(selected_user, df)
+            fig, ax = plt.subplots()
+            ax.barh(common_words[0], common_words[1])
+            st.pyplot(fig)
+        except:
+            common_words = helper.most_common_words(selected_user, pd.DataFrame({"user":[selected_user],"message":["(No-messages)"]}))
+            fig, ax = plt.subplots()
+            ax.barh(common_words[0], common_words[1])
+            st.pyplot(fig)
 
-        fig, ax = plt.subplots()
-
-        ax.barh(common_words[0], common_words[1])
-
-        st.pyplot(fig)
 
         #emoji analysis
         st.title("Emoji Analysis")
@@ -143,7 +172,10 @@ if uploaded_file is not None:
         with col2:
             fig, ax = plt.subplots()
 
-            ax.pie(emoji_df[1].head(), labels=emoji_df[0].head(), autopct = "%0.2f")
+            try:
+                ax.pie(emoji_df[1].head(), labels=emoji_df[0].head(), autopct = "%0.2f")
+            except:
+                ""
 
             st.pyplot(fig)
 

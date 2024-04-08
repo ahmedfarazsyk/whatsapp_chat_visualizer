@@ -88,12 +88,14 @@ def emoji_analysis(selected_user, df):
 
     if selected_user != "Overall":
         df = df[df["user"] == selected_user]
-    
+
     emojis = []
     for message in df["message"]:
         emojis.extend([e for e in message if e in emoji.EMOJI_DATA])
 
     emoji_df = pd.DataFrame(Counter(emojis).most_common(len(Counter(emojis))))
+    
+
 
     return emoji_df
 
@@ -143,3 +145,24 @@ def activity_heatmap(selected_user, df):
     pivot_map = df.pivot_table(index = "day_name", columns = "period", values = "message", aggfunc = "count").fillna(0)
 
     return pivot_map
+
+def sentiment_analysis(selected_user, df):
+
+    if selected_user != "Overall":
+        df = df[df["user"] == selected_user]
+
+    counts = df["sentiment"].value_counts().fillna(0)
+    try:
+        positive = counts[0]
+    except:
+        positive = 0
+    try:
+        neutral = counts[1]
+    except:
+        neutral = 0
+    try:
+        negative = counts[2]
+    except:
+        negative = 0
+
+    return positive, neutral, negative

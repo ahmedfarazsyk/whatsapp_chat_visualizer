@@ -1,5 +1,12 @@
 import re
 import pandas as pd
+import pickle
+import nltk
+import sklearn
+f = open("stop_hinglish.txt", "r")
+stopwords = f.read().split("\n")
+from nltk.stem.porter import PorterStemmer
+ps = PorterStemmer()
 
 def preprocess(data):
     pattern = r"\d{1,2}/\d{1,2}/\d{2,4},\s\d{1,2}:\d{1,2}\s(?:[ap]m)\s-\s"
@@ -58,5 +65,42 @@ def preprocess(data):
             period.append(str(hour) + "-" + str(hour+1))
 
     df["period"] = period
+
+    def preprocess_text(text):
+
+        text = text.lower()
+        text = nltk.word_tokenize(text)
+
+        y = []
+        for i in text:
+            if i.isalnum():
+                y.append(i)
+
+        text = y[:]
+        y.clear()
+
+        for i in text:
+            if i not in stopwords:
+                y.append(i)
+
+        text = y[:]
+        y.clear()
+
+        for i in text:
+            y.append(ps.stem(i))
+            
+        return " ".join(y)
+    
+    model = pickle.load(open("LogisticRegressionClassifier.pkl", "rb"))
+    tfidf = pickle.load(open("vectorizer.pkl", "rb"))
+
+    def predict(text):
+        preprocessed = preprocess_text(text)
+        vector = tfidf.transform([preprocessed]).toarray()
+        output = model.predict(vector)[0]
+        return output
+
+
+    df["sentiment"] = df["message"].apply(predict)
 
     return df
